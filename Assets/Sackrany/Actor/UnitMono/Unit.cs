@@ -1,0 +1,243 @@
+﻿using System;
+using System.Collections.Generic;
+
+using ModifiableVariable;
+
+using Sackrany.Actor.Managers;
+using Sackrany.Actor.Modules;
+using Sackrany.Utils.Hash;
+using Sackrany.Utils.Pool.Abstracts;
+using Sackrany.Utils.Tracer;
+
+using UnityEngine;
+
+namespace Sackrany.Actor.UnitMono
+{
+    [TraceAll]
+    [AddComponentMenu("Sackrany/Actor/Unit")]
+    public class Unit : MonoBehaviour, IEquatable<Unit>, IPoolable, ITraceable
+    {
+        public bool DebugTracing;
+        public bool IsTracing() => DebugTracing;
+        
+        [SerializeField] bool WorkByDefault;
+        public UnitTag Tag;
+        public EventBus.EventBus Event;
+
+        [SerializeField] ModulesController Controller;
+        public ModulesController GetController() => Controller;
+        public IEnumerable<Module> GetModules() => Controller?.GetModules();
+        
+        public UnitArchetype Archetype => _archetype;
+        [SerializeField] UnitArchetype _archetype;
+        
+        public TeamInfo Team { get; private set; }
+        
+        public Modifiable<float> TimeFlow { get; private set; }
+        public bool IsWorking { get; private set; }
+        public bool IsActive => IsWorking && gameObject.activeSelf && gameObject.activeInHierarchy;
+        public uint Hash { get; private set; }
+        
+        bool _isInitialized;
+        bool _isQuitting;
+        
+        void OnValidate()
+        {
+            _archetype = new UnitArchetype(this);
+        }
+        
+        void Awake()
+        {
+            Initialize();
+            if (WorkByDefault)
+            {
+                StartWork();
+            }
+        }
+        public void Initialize()
+        {
+            if (_isInitialized) return;
+            Application.quitting += OnApplicationQuitting;
+            
+            Hash = SimpleId.Next();
+            
+            Tag ??= new UnitTag();
+            Tag.Initialize(this);
+            
+            Event ??= new EventBus.EventBus();
+            Event = new EventBus.EventBus();
+            
+            _archetype = new UnitArchetype(this);
+            TimeFlow = new Modifiable<float>(1);
+            Team = new TeamInfo(Tag, true);
+
+            Controller ??= new ModulesController();
+            Controller.FillUnit(this);
+            Controller.FillController(Controller);
+            _isInitialized = true;
+        }
+        void OnApplicationQuitting() => _isQuitting = true;
+        void Start()
+        {
+            Controller.Start();
+        }
+
+        #region MODULES
+        public bool Add(ModuleTemplate template, out Module module) => Controller.Add(template, out module);
+        public bool Add(ModuleTemplate template) => Controller.Add(template);
+        public bool Add(ModuleTemplate[] templates) => Controller.Add(templates);
+        
+        public bool Has<T>() where T : Module => Controller.Has<T>();
+        public bool Has(Type type) => Controller.Has(type);
+        public bool Has(ModuleTemplate template) => Controller.Has(template);
+        
+        public T Get<T>() where T : Module => Controller.Get<T>();
+        public Module Get(Type type) => Controller.Get(type); 
+        public Module Get(ModuleTemplate template) => Controller.Get(template);
+        
+        public bool Remove<T>() where T : Module => Controller.Remove<T>();
+        public bool Remove<T>(T module) where T : Module => Remove<T>();
+        public bool Remove(ModuleTemplate template) => Controller.Remove(template);
+        public bool Remove(Type type) => Controller.Remove(type);
+
+        public void RemoveAll() => Controller.RemoveAll();
+        
+        public bool TryGet<T>(out T result) where T : Module => Controller.TryGet(out result);
+        public bool TryGet(Type type, out Module result) => Controller.TryGet(type, out result);
+        public bool TryGet(ModuleTemplate template, out Module result) => Controller.TryGet(template, out result);
+        #endregion
+
+        #region UPDATE
+        public void OnUpdate(float dt)
+        {
+            if (!IsWorking) return;
+            Controller.Update(dt * TimeFlow);
+        }
+        public void OnFixedUpdate(float dt)
+        {
+            if (!IsWorking) return;
+            Controller.FixedUpdate(dt * TimeFlow);
+        }
+        public void OnLateUpdate(float dt)
+        {
+            if (!IsWorking) return;
+            Controller.LateUpdate(dt * TimeFlow);
+        }
+        #endregion
+
+        #region SERIALIZATION
+        public bool IsDeserialized {get; private set;}
+        public void MarkAsDeserialized()
+        {
+            IsDeserialized = true;
+        }
+        #endregion
+        
+        public void StartWork()
+        {
+            if (IsWorking) return;
+            IsWorking = true;
+            UnitRegisterManager.RegisterUnit(this);
+            OnStartWorking?.Invoke(this);
+        }
+        public void StopWork()
+        {
+            if (!IsWorking) return;
+            IsWorking = false;
+            UnitRegisterManager.UnregisterUnit(this);
+            OnStopWorking?.Invoke(this);
+        }
+        
+        public void ResetState()
+        {
+            if (!Application.isPlaying) return;
+            OnReset?.Invoke(this);
+            Tag.Reset();
+            Event.Reset();
+            TimeFlow.Clear();
+            Controller.ResetState();
+        }
+        public void Reinitialize()
+        {
+            OnRestart?.Invoke(this);
+            Tag.Reset();
+            Event.Reset();
+            TimeFlow.Clear();
+            Controller.Reinitialize();
+        }
+        
+        public void OnPooled()
+        {
+            gameObject.SetActive(true);
+            Reinitialize();
+            if (WorkByDefault) StartWork();
+        }
+        public void OnReleased()
+        {
+            StopWork();
+            gameObject.SetActive(false);
+        }
+        
+        public void SetWorkByDefault(bool value) => WorkByDefault = value;
+        public void Run()
+        {
+            WorkByDefault = true;
+            StartWork();
+        }
+        public void UpdateTeam()
+        {
+            Team = new TeamInfo(Tag, true);
+        }
+        
+        public event Action<Unit> OnStartWorking;
+        public event Action<Unit> OnStopWorking;
+        public event Action<Unit> OnRestart;
+        public event Action<Unit> OnReset;
+
+        #region EQUALS
+        public bool Equals(Unit other)
+        {
+            if (ReferenceEquals(other, null)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return Hash == other.Hash;
+        }
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(obj, null)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != GetType()) return false;
+
+            return Equals((Unit)obj);
+        }
+        public override int GetHashCode()
+        {
+            return unchecked((int)Hash);
+        }
+
+        public static bool operator ==(Unit left, Unit right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (ReferenceEquals(left, null)) return false;
+            return left.Equals(right);
+        }
+        public static bool operator !=(Unit left, Unit right)
+            => !(left == right);
+        #endregion
+        
+        void OnDestroy()
+        {
+            if (_isQuitting) return;
+            Controller.Dispose();
+            UnitRegisterManager.UnregisterUnit(this);
+            Application.quitting -= OnApplicationQuitting;
+        }
+        
+        #if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            Controller.OnDrawGizmos();    
+        }
+        #endif
+    }
+}
