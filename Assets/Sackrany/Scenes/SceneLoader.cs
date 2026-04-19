@@ -52,7 +52,7 @@ namespace Sackrany.Scenes
         static async UniTask LoadDefaultScene()
         {
             #if !UNITY_EDITOR
-            var defaultScene = Config<SceneConfig>.Instance.DefaultScene;
+            var defaultScene = ConfigGet<SceneConfig>.Value.DefaultScene;
             if (!_scenes.TryGetValue(defaultScene, out var sceneData)) return;
             if (sceneData.IsLoaded) return;
 

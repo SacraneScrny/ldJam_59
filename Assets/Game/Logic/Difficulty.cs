@@ -8,6 +8,7 @@ namespace Game.Logic
     {
         public ReactiveProperty<int> CurrentDifficulty { get; private set; }
 
+        public float EnemyHealth = 3;
         public float EnemyAttackInterval = 1f;
         public float EnemyAttackAngle = 15;
         public float EnemyAttackAngleStep = .5f;

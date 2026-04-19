@@ -9,11 +9,14 @@ EditorBuildSettings:
     path: Assets/Sackrany/SystemScene.unity
     guid: 88a04301616b8c94db62cb39de5ce96f
   - enabled: 1
-    path: Assets/SackranyUI/Default/MainMenuPreset.unity
-    guid: 6066e7e19608cd9408718fe64a4b34bc
-  - enabled: 1
+    path: Assets/Game/LDGame.unity
+    guid: cd6e1659a94ca6044a2a90612c1d6104
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 0
+    path: Assets/SackranyUI/Default/MainMenuPreset.unity
+    guid: 6066e7e19608cd9408718fe64a4b34bc
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

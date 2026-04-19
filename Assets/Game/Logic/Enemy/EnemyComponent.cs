@@ -4,8 +4,11 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 
 using Game.Logic.SignalWave;
+using Game.Logic.UI.World;
 
+using Sackrany.Actor.EventBus;
 using Sackrany.Actor.Managers;
+using Sackrany.Actor.Traits.Damage;
 using Sackrany.Actor.Traits.Tags;
 using Sackrany.Actor.UnitMono;
 using Sackrany.Extensions;
@@ -13,21 +16,35 @@ using Sackrany.Utils;
 
 using UnityEngine;
 
+using Random = UnityEngine.Random;
+
 namespace Game.Logic.Enemy
 {
     public class EnemyComponent : MonoBehaviour
     {
         public Transform Head;
-        
+        public Transform Body;
+
+        float _health;
+
+        SegmentedBar _healthBar;
         bool _isInited;
         bool _isAttacking;
         Unit _player;
+        Unit _me;
         float _attackInterval;
+        int _layer;
 
         CancellationToken _ct;
         
         void Start()
         {
+            _healthBar = GetComponentInChildren<SegmentedBar>();
+            _healthBar.ConnectLine(transform);
+            _health = Difficulty.Instance.EnemyHealth;
+            _healthBar.Spawn(Mathf.RoundToInt(_health));
+            
+            _layer = LayerMask.GetMask("Player", "Obstacle");
             _ct = gameObject.GetCancellationTokenOnDestroy();
             UnitCmd.Execute(
                 (u) => u.Tag.HasTag<Player>(), 
@@ -38,6 +55,21 @@ namespace Game.Logic.Enemy
                     }
                 );
             Attack().Forget();
+            Body.localRotation *= Quaternion.Euler(0f, 0, Random.Range(0, 180));
+
+            _me = GetComponent<Unit>();
+            _me.Event.Subscribe<Events.OnDamage, DamageInfo>((d) =>
+            {
+                _health -= d.Damage;
+                for (int i = 0; i < d.Damage; i++)
+                    _healthBar.Hit();
+                CheckIfDead();
+            });
+        }
+
+        void CheckIfDead()
+        {
+            
         }
         
         void Update()
@@ -45,7 +77,7 @@ namespace Game.Logic.Enemy
             if (!_isInited) return;
             
             var dir = _player.transform.position.With(z: 0) - transform.position.With(z: 0);
-            var hit = Physics2D.Raycast(transform.position.With(z: 0), dir, Mathf.Infinity);
+            var hit = Physics2D.Raycast(transform.position.With(z: 0), dir, Mathf.Infinity, _layer);
             if (hit.collider != null && hit.collider.gameObject.CompareTag("Player"))
             {
                 _isAttacking = true;

@@ -2,6 +2,7 @@
 
 using Sackrany.Actor.Modules;
 using Sackrany.Actor.Modules.ModuleComposition;
+using Sackrany.Utils;
 using Sackrany.Utils.Pool.Extensions;
 
 using UnityEngine;
@@ -13,23 +14,39 @@ namespace Game.Logic.Missle
     {
         [Template] MissleFly _template;
 
-        float _speed;
+        public float Speed { get; private set; }
+        public float Distance { get; private set; }
+        
         float _time;
         protected override void OnReset()
         {
-            _speed = 0;
+            OnFinished = null;
+            Distance = 0;
+            Speed = 0;
             _time = 0;
         }
         public void OnFixedUpdate(float deltaTime)
         {
             _time += deltaTime;
-            _speed += deltaTime * _template.Accel;
-            _speed = Mathf.Min(_speed, _template.MaxSpeed);
-            Unit.transform.position += Unit.transform.right * deltaTime * _speed;
+            Speed += deltaTime * _template.Accel;
+            Speed = Mathf.Min(Speed, _template.MaxSpeed);
+            Unit.transform.position += Unit.transform.right * deltaTime * Speed;
+            Distance += deltaTime * Speed;
             
             if (_time >= _template.TimeLive)
-                Unit.RELEASE();
+            {
+                StopWorking();
+            }
         }
+
+        public void StopWorking()
+        {
+            OnFinished?.Invoke();
+            Unit.StopWork();
+            DeferredExecution.AfterDelay(1f, () => Unit.RELEASE());
+        }
+
+        public event Action OnFinished;
     }
 
     [Serializable]

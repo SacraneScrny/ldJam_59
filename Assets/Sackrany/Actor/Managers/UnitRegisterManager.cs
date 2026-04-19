@@ -119,8 +119,8 @@ namespace Sackrany.Actor.Managers
 
             if (Instance._handlers.TryGetValue(unit.Hash, out var handlers))
             {
-                unit.OnStartWorking   -= Instance.HandleUnitStarted;
-                unit.Tag.OnTagAdded   -= handlers.OnTagAdded;
+                unit.OnStartWorking -= Instance.HandleUnitStarted;
+                unit.Tag.OnTagAdded -= handlers.OnTagAdded;
                 unit.Tag.OnTagRemoved -= handlers.OnTagRemoved;
                 Instance._handlers.Remove(unit.Hash);
             }
