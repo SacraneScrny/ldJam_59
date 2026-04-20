@@ -116,11 +116,11 @@ namespace SackranyUI.Core.Static
 
                 foreach (var field in fields)
                 {
-                    if (field.GetCustomAttribute<OutputBindAttribute>() is { } d)
+                    foreach (var d in field.GetCustomAttributes<OutputBindAttribute>(false))
                         fieldBinds.Add(new OutputField(field, field.FieldType, d.id));
-                    if (field.GetCustomAttribute<InputBindAttribute>() is { } c)
+                    foreach (var c in field.GetCustomAttributes<InputBindAttribute>(false))
                         inputFieldBinds.Add(new InputField(field, field.FieldType, c.id));
-                    if (field.GetCustomAttribute<CollectionBindAttribute>() is { } col)
+                    foreach (var col in field.GetCustomAttributes<CollectionBindAttribute>(false))
                         collectionBinds.Add(new CollectionField(field, field.FieldType, col.id));
                 }
 

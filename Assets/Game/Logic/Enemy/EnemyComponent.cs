@@ -3,6 +3,7 @@ using System.Threading;
 
 using Cysharp.Threading.Tasks;
 
+using Game.Logic.Level;
 using Game.Logic.SignalWave;
 using Game.Logic.UI.World;
 
@@ -41,7 +42,7 @@ namespace Game.Logic.Enemy
         {
             _healthBar = GetComponentInChildren<SegmentedBar>();
             _healthBar.ConnectLine(transform);
-            _health = Difficulty.Instance.EnemyHealth;
+            _health = Difficulty.Instance.GetEnemyHealth();
             _healthBar.Spawn(Mathf.RoundToInt(_health));
             
             _layer = LayerMask.GetMask("Player", "Obstacle");
@@ -69,7 +70,9 @@ namespace Game.Logic.Enemy
 
         void CheckIfDead()
         {
-            
+            if (_health > 0) return;
+            GameLevelManager.MarkWon();
+            _isInited = false;
         }
         
         void Update()
@@ -100,7 +103,7 @@ namespace Game.Logic.Enemy
             float angle = Mathf.LerpAngle(
                 Head.transform.eulerAngles.z,
                 targetAngle,
-                Difficulty.Instance.EnemyHeadRotateSpeed * Time.deltaTime
+                Difficulty.Instance.GetEnemyHeadRotateSpeed() * Time.deltaTime
             );
 
             Head.transform.rotation = Quaternion.Euler(0f, 0f, angle);
@@ -125,22 +128,22 @@ namespace Game.Logic.Enemy
                 }
                 
                 Vector2 dir = (_player.transform.position - transform.position);
-                if (Vector2.Angle(dir, Head.transform.right) >= Difficulty.Instance.EnemyAttackAngle / 2)
+                if (Vector2.Angle(dir, Head.transform.right) >= Difficulty.Instance.GetEnemyAttackAngle() / 2)
                 {
                     await UniTask.Yield(_ct);
                     continue;
                 }
 
-                _attackInterval = Difficulty.Instance.EnemyAttackInterval;
+                _attackInterval = Difficulty.Instance.GetEnemyAttackInterval();
                     
-                float startAngle = -Difficulty.Instance.EnemyAttackAngle;
+                float startAngle = -Difficulty.Instance.GetEnemyAttackAngle();
                 float endAngle = -startAngle;
 
                 while (startAngle <= endAngle)
                 {
                     SignalWaveManager.Spawn(Head.position, Quaternion.Euler(0, 0, startAngle) * Head.right,
-                        Difficulty.Instance.EnemyAttackSignalStartSpeed);
-                    startAngle += Difficulty.Instance.EnemyAttackAngleStep;
+                        Difficulty.Instance.GetEnemyAttackSignalStartSpeed());
+                    startAngle += Difficulty.Instance.GetEnemyAttackAngleStep();
                 }
 
                 await UniTask.Yield(_ct);

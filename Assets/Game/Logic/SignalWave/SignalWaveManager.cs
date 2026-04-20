@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Game.Logic.Level;
 using Game.Logic.Level.Components;
 
+using Sackrany.Actor.Managers;
 using Sackrany.Extensions;
 using Sackrany.GameInput;
 using Sackrany.Utils;
@@ -34,6 +36,8 @@ namespace Game.Logic.SignalWave
         
         void Start()
         {
+            GameLevelManager.OnLevelStarted += () => elements.Clear();
+            
             _mesh = new Mesh();
             _mesh.MarkDynamic();
             _material = new Material(Shader.Find("Sprites/Default"));
@@ -58,7 +62,7 @@ namespace Game.Logic.SignalWave
             _mesh.SetIndices(_indices, MeshTopology.Triangles, 0);
         }
         
-        float _angle;
+        /*float _angle;
         void Update()
         {
             if (InputManager.PlayerCache.Attack)
@@ -69,7 +73,7 @@ namespace Game.Logic.SignalWave
                 var point = UnityEngine.Camera.main.ScreenToWorldPoint(InputManager.CurrentPointer.ScreenPosition);
                 Spawn(point.With(z: 0), dir, StartSpeed);
             }    
-        }
+        }*/
         void FixedUpdate()
         {
             for (int i = 0; i < elements.Count; i++)
@@ -77,9 +81,11 @@ namespace Game.Logic.SignalWave
                 var el = elements[i];
                 
                 el.Collision();
-                el.Move(Time.deltaTime, Dumping, LevelGenerator.Instance.LevelRect);
+                el.Move(
+                    UnitTimeFlowManager.TimeFlow * Time.deltaTime, 
+                    Dumping, LevelGenerator.Instance.LevelRect);
 
-                if (el.IsDead(Time.deltaTime))
+                if (el.IsDead(UnitTimeFlowManager.TimeFlow * Time.deltaTime))
                 {
                     RemoveFast(elements, i);
                     i--;

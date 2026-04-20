@@ -1,6 +1,8 @@
 ﻿using System;
 
 using Game.Logic.Drone.Modules;
+using Game.Logic.Level;
+
 using Sackrany.Actor.Managers;
 using Sackrany.Actor.Modules;
 using Sackrany.Actor.Modules.ModuleComposition;
@@ -36,6 +38,20 @@ namespace Game.Logic.Volume
                     _hasDrone = true;
                 }
             );
+            GameLevelManager.OnLevelStarted += () =>
+            {
+                _hasDrone = false;
+
+                UnitCmd.Execute(
+                    (u) => u.Tag.HasTag<Player>(), 
+                    (u) =>
+                    {
+                        _drone = u;
+                        _droneSignal = _drone.Get<DroneSignalAffectModule>();
+                        _hasDrone = true;
+                    }
+                );
+            };
         }
         protected override void OnReset()
         {

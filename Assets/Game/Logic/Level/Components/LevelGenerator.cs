@@ -38,8 +38,12 @@ namespace Game.Logic.Level.Components
         {
             for (int i = 0; i < WallPrefabs.Length; i++)
                 _wallsToType.Add(WallPrefabs[i].name, i);
-
             _cts = CancellationTokenSource.CreateLinkedTokenSource(gameObject.GetCancellationTokenOnDestroy());
+            GameLevelManager.OnLevelStarted += NewLevel;
+            NewLevel();
+        }
+        public void NewLevel()
+        {
             Generate(_cts.Token).Forget();
         }
 
@@ -76,7 +80,6 @@ namespace Game.Logic.Level.Components
 
             Spawn();
         }
-
         async UniTask Prewarm(CancellationToken ct)
         {
             for (int y = 0; y < _gridSize.y; y++)
@@ -229,11 +232,13 @@ namespace Game.Logic.Level.Components
             p.transform.position = ToWorldPos(_playerPosition);
             p.SetActive(true);
             _temp.Add(p);
+            GameLevelManager.DestroyOnReset(p);
 
             var e = Instantiate(EnemyPrefab);
             e.transform.position = ToWorldPos(_enemyPosition);
             e.SetActive(true);
             _temp.Add(e);
+            GameLevelManager.DestroyOnReset(e);
         }
 
         GameObject GetWall(int num)
@@ -247,14 +252,12 @@ namespace Game.Logic.Level.Components
             go.SetActive(true);
             return go;
         }
-
         GameObject CreateWall(int num)
         {
             var go = Instantiate(WallPrefabs[num]);
             go.name = WallPrefabs[num].name;
             return go;
         }
-
         void Release(GameObject go)
         {
             if (go == null || !go.activeSelf) return;
@@ -275,7 +278,6 @@ namespace Game.Logic.Level.Components
             ret -= new Vector3(Instance.CellSize / 2f, Instance.CellSize / 2f);
             return ret;
         }
-
         public static bool IsInWall(Vector3 pos)
         {
             pos += new Vector3((Instance._gridSize.x / 2f) * Instance.CellSize, (Instance._gridSize.y / 2f) * Instance.CellSize);
@@ -290,7 +292,6 @@ namespace Game.Logic.Level.Components
 
             return Instance._grid[cellPos.x, cellPos.y] != 0;
         }
-
         public static Vector3 GetNormal(Vector3 pos)
         {
             var worldPos = pos;

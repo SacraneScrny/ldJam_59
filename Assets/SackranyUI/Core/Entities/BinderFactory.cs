@@ -41,6 +41,13 @@ namespace SackranyUI.Core.Entities
 
             { (typeof(ReactiveProperty<float>), typeof(Image)),
                 (vm, v) => MakeGenericBinder((ReactiveProperty<float>)vm, x => ((Image)v).fillAmount = x) },
+            
+            { (typeof(ReactiveProperty<float>), typeof(Graphic)),
+                (vm, v) => MakeGenericBinder((ReactiveProperty<float>)vm, x =>
+                {
+                    var g = ((Graphic)v);
+                    g.color = new Color(g.color.r, g.color.g, g.color.b, x);
+                }) },
 
             { (typeof(ReactiveProperty<Color>), typeof(Image)),
                 (vm, v) => MakeGenericBinder((ReactiveProperty<Color>)vm, x => ((Image)v).color = x) },
@@ -56,6 +63,11 @@ namespace SackranyUI.Core.Entities
 
             { (typeof(ReactiveCommand), typeof(Button)),
                 (vm, v) => new ActionBinder((Button)v, () => ((ReactiveCommand)vm).Execute(Unit.Default)) },
+            
+            { (typeof(ReactiveProperty<Vector3>), typeof(RectTransform)),
+                (vm, v) => MakeGenericBinder((ReactiveProperty<Vector3>)vm, x => ((RectTransform)v).localPosition = x) },
+            { (typeof(ReactiveProperty<Quaternion>), typeof(RectTransform)),
+                (vm, v) => MakeGenericBinder((ReactiveProperty<Quaternion>)vm, x => ((RectTransform)v).localRotation = x) },
         };
 
         static readonly Dictionary<Type, InputFactoryData> _inputFactories = new()

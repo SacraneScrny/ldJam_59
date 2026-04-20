@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Game.Logic.Level;
+
 using Sackrany.Actor.Modules;
 using Sackrany.Actor.Modules.ModuleComposition;
 using Sackrany.GameInput;
@@ -15,13 +17,12 @@ namespace Game.Logic.Drone.Modules
         
         protected override void OnStart()
         {
-            _flyModule.MoveDirection.Add(() =>
-            {
-                return InputManager.PlayerCache.Move;
-            });
+            _flyModule.MoveDirection.Add(() => GameLevelManager.IsWaitingForRestart ? Vector2.zero : InputManager.PlayerCache.Move);
         }
         public void OnFixedUpdate(float deltaTime)
         {
+            if (GameLevelManager.IsWaitingForRestart) return;
+            
             if (InputManager.PlayerCache.Jump)
             {
                 _missleModule.Shoot();

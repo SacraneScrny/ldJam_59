@@ -1,7 +1,7 @@
 {
   "MinDb": -80.0,
   "MaxDb": 20.0,
-  "DbOffset": -20.0,
+  "DbOffset": -5.0,
   "MasterVolume": "MasterVolume",
   "GameVolume": "GameVolume",
   "MusicVolume": "MusicVolume",

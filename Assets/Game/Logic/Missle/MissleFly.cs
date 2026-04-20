@@ -2,6 +2,7 @@
 
 using Sackrany.Actor.Modules;
 using Sackrany.Actor.Modules.ModuleComposition;
+using Sackrany.GameAudio;
 using Sackrany.Utils;
 using Sackrany.Utils.Pool.Extensions;
 
@@ -16,6 +17,15 @@ namespace Game.Logic.Missle
 
         public float Speed { get; private set; }
         public float Distance { get; private set; }
+        
+        protected override void OnStart()
+        {
+            _template.FlyStartClip
+                .Prepare()
+                .AtPosition(Unit.transform.position)
+                .Distance(0, 1000)
+                .Play();    
+        }
         
         float _time;
         protected override void OnReset()
@@ -55,5 +65,6 @@ namespace Game.Logic.Missle
         [HashKey] public float Accel;
         [HashKey] public float MaxSpeed;
         [HashKey] public float TimeLive;
+        public AudioClip FlyStartClip;
     } 
 }

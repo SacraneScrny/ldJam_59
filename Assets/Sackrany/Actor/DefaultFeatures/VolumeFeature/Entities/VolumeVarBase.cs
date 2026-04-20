@@ -196,12 +196,14 @@ namespace Sackrany.Actor.DefaultFeatures.VolumeFeature.Entities
     {
         public float postExposure;
         public float contrast;
+        public float saturation;
         public Color colorFilter;
 
         public ColorAdjustmentsVar(ColorAdjustments c)
         {
             postExposure = c.postExposure.value;
             contrast = c.contrast.value;
+            saturation = c.saturation.value;
             colorFilter = c.colorFilter.value;
         }
 
@@ -210,6 +212,7 @@ namespace Sackrany.Actor.DefaultFeatures.VolumeFeature.Entities
             a.postExposure += b.postExposure;
             a.contrast += b.contrast;
             a.colorFilter += b.colorFilter;
+            a.saturation += b.saturation;
             return a;
         }
 
@@ -218,6 +221,7 @@ namespace Sackrany.Actor.DefaultFeatures.VolumeFeature.Entities
             a.postExposure *= b.postExposure;
             a.contrast *= b.contrast;
             a.colorFilter *= b.colorFilter;
+            a.saturation *= b.saturation;
             return a;
         }
 
@@ -226,6 +230,7 @@ namespace Sackrany.Actor.DefaultFeatures.VolumeFeature.Entities
             c.postExposure.value = postExposure;
             c.contrast.value = contrast;
             c.colorFilter.value = colorFilter;
+            c.saturation.value = saturation;
         }
     }
 

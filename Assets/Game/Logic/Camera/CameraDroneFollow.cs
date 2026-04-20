@@ -1,5 +1,6 @@
 ﻿using System;
 
+using Game.Logic.Level;
 using Game.Logic.Level.Components;
 
 using Sackrany.Actor.DefaultFeatures.CameraFeatures;
@@ -21,6 +22,8 @@ namespace Game.Logic.Camera
         Vector3 _currentCameraOffset;
         float _currentOrthoOffset;
         Unit _player;
+
+        bool _isInited;
         
         protected override void OnStart()
         {
@@ -31,17 +34,33 @@ namespace Game.Logic.Camera
                 (u) =>
                 {
                     _player = u;
+                    _isInited = true;
                 }
             );
+            GameLevelManager.OnLevelStarted += () =>
+            {
+                _isInited = false;
+
+                UnitCmd.Execute(
+                    (u) => u.Tag.HasTag<Player>(),
+                    (u) =>
+                    {
+                        _player = u;
+                        _isInited = true;
+                    }
+                );
+            };
             _camera.CameraPosition.Add(() => _currentCameraOffset);
         }
         public void OnUpdate(float deltaTime)
         {
+            if (!_isInited) return;
+            
             var rect = LevelGenerator.Instance.LevelRect;
             _currentOrthoOffset = rect.size.magnitude * _template.ScaleByRect;
             
             var orig = _camera.CameraPosition.BaseValue;
-            var player = (_player ?? Unit).transform.position;
+            var player = _player.transform.position;
             _currentCameraOffset = Vector3.Lerp(_currentCameraOffset, Vector3.Lerp(orig, player, _template.ToPlayerLerpCoef), _template.Speed * deltaTime);
         }
     }

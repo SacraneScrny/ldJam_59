@@ -1,9 +1,11 @@
 ﻿using System;
 
 using ModifiableVariable;
+using ModifiableVariable.Stages.StageFactory;
 
 using R3;
 
+using Sackrany.Actor.Managers;
 using Sackrany.Actor.Modules;
 using Sackrany.Actor.Modules.ModuleComposition;
 
@@ -38,6 +40,9 @@ namespace Game.Logic.Drone.Modules
 
             LinearDamping.Add(() => _template.LinearDamping);
             AngularDamping.Add(() => _template.AngularDamping);
+
+            LinearDamping.Add(() => 1f / UnitTimeFlowManager.TimeFlow, General.Multiply);
+            AngularDamping.Add(() => 1f / UnitTimeFlowManager.TimeFlow, General.Multiply);
         }
 
         protected override void OnReset()
